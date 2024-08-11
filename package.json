@@ -1,0 +1,13 @@
+{
+  "name": "ifei-claw-machine",
+  "scripts": {
+    "start": "node server.js",
+    "pi": "node public/raspberry.js"
+  },
+  "packageManager": "yarn@4.2.2",
+  "dependencies": {
+    "express": "^4.19.2",
+    "simple-peer": "^9.11.1",
+    "socket.io": "^4.7.5"
+  }
+}
