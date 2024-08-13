@@ -7,7 +7,7 @@ const io = socketIO(server);
 
 const PORT = process.env.PORT || 3000;
 const RPI_PASSWORD = process.env.RPI_PASSWORD || "ifei6000";
-
+let userCount;
 let rpiSocket = null;
 
 app.use(express.static("public"));
@@ -45,6 +45,20 @@ io.on("connection", (socket) => {
     console.log("A user disconnected:", socket.id);
     if (socket === rpiSocket) {
       rpiSocket = null;
+    }
+  });
+
+  socket.on("frame", (frame) => {
+    if (socket === rpiSocket) {
+      userCount = io.engine.clientsCount;
+      console.log("User count:", userCount);
+      socket.broadcast.emit("frame", frame);
+    }
+  });
+
+  socket.on("direction", (direction) => {
+    if (true) {
+      socket.broadcast.emit("direction", direction);
     }
   });
 });
