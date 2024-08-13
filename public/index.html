@@ -19,7 +19,8 @@
         display: flex;
         justify-content: center;
         align-items: center;
-        min-height: 100svh;
+        height: 100svh;
+        overflow: hidden;
       }
       h1 {
         color: #283618;
@@ -74,7 +75,13 @@
         margin-left: 1rem;
         font-size: 1.875rem;
         color: #fefae0;
+        cursor: pointer;
       }
+
+      #claw:hover {
+        background-color: #dda15e;
+      }
+
       p,
       footer {
         font-size: 1.25rem;
@@ -96,6 +103,55 @@
     <script src="/socket.io/socket.io.js"></script>
     <script src="https://cdnjs.cloudflare.com/ajax/libs/simple-peer/9.10.0/simplepeer.min.js"></script>
     <script>
+      // Joystick logic. Can be move to top, button, left, right, top left, top right, bottom, bottom left, bottom right. Find the closest side to the joystick and emit the direction.
+      const joystick = document.getElementById("joystick");
+      const joystickContainer = document.getElementById("joystick-container");
+      const joystickContainerSize = joystickContainer.offsetWidth;
+      let isJoystickPressed = false;
+
+      const joystickMove = (event) => {
+        if (isJoystickPressed) {
+          const x =
+            (event.clientX - joystickContainer.offsetLeft) /
+            joystickContainerSize;
+          const y =
+            (event.clientY - joystickContainer.offsetTop) /
+            joystickContainerSize;
+          console.log(event.clientY - joystickContainer.offsetTop);
+          if (x < 0.3) {
+            joystick.style.left = "25%";
+            socket.emit("direction", "left");
+          } else if (x > 0.7) {
+            joystick.style.left = "75%";
+            socket.emit("direction", "right");
+          } else {
+            joystick.style.left = "50%";
+          }
+          if (y < 0.3) {
+            joystick.style.top = "25%";
+            socket.emit("direction", "top");
+          } else if (y > 0.7) {
+            joystick.style.top = "75%";
+            socket.emit("direction", "bottom");
+          } else {
+            joystick.style.top = "50%";
+          }
+        }
+      };
+
+      joystickContainer.addEventListener("mousedown", (event) => {
+        isJoystickPressed = true;
+        joystickMove(event);
+      });
+
+      document.addEventListener("mouseup", () => {
+        isJoystickPressed = false;
+        joystick.style.top = "50%";
+        joystick.style.left = "50%";
+      });
+
+      document.addEventListener("mousemove", joystickMove);
+
       const socket = io();
       const videoElement = document.getElementById("remoteVideo");
       let peer;
@@ -104,7 +160,6 @@
         console.log("Connected to server");
       });
 
-      // Handle offer from Raspberry Pi
       socket.on("offer", (offer) => {
         peer = new SimplePeer({
           initiator: false,
@@ -118,11 +173,11 @@
         });
 
         peer.on("stream", (stream) => {
+          console.log("Got remote stream");
           videoElement.srcObject = stream;
         });
       });
 
-      // Handle ICE candidate
       socket.on("candidate", (candidate) => {
         if (peer) {
           peer.signal(candidate);
