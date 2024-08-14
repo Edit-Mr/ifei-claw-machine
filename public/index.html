@@ -63,7 +63,7 @@
         transform: translate(-50%, -50%);
         top: 50%;
         left: 50%;
-        transition: all 0.2s ease-in;
+        /* transition: all 0.1s; */
         cursor: pointer;
       }
 
@@ -119,23 +119,20 @@
             (event.clientY - joystickContainer.offsetTop) /
             joystickContainerSize;
           console.log(event.clientY - joystickContainer.offsetTop);
+
+          joystick.style.top = `${Math.max(Math.min(y,.75),.25) * 100}%`;
+          joystick.style.left = `${Math.max(Math.min(x,.75),.25) * 100}%`;
           if (x < 0.3) {
-            joystick.style.left = "25%";
             socket.emit("direction", "left");
           } else if (x > 0.7) {
-            joystick.style.left = "75%";
             socket.emit("direction", "right");
           } else {
-            joystick.style.left = "50%";
           }
           if (y < 0.3) {
-            joystick.style.top = "25%";
             socket.emit("direction", "top");
           } else if (y > 0.7) {
-            joystick.style.top = "75%";
             socket.emit("direction", "bottom");
           } else {
-            joystick.style.top = "50%";
           }
         }
       };
@@ -152,6 +149,22 @@
       });
 
       document.addEventListener("mousemove", joystickMove);
+      
+      // mobile support
+      joystickContainer.addEventListener("touchstart", (event) => {
+        isJoystickPressed = true;
+        joystickMove(event.touches[0]);
+      });
+
+      document.addEventListener("touchend", () => {
+        isJoystickPressed = false;
+        joystick.style.top = "50%";
+        joystick.style.left = "50%";
+      });
+
+      document.addEventListener("touchmove", (event) => {
+        joystickMove(event.touches[0]);
+      });
 
       const socket = io();
 
